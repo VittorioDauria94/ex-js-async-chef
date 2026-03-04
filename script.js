@@ -13,16 +13,42 @@
 
 async function fetchJson(url) {
   const resp = await fetch(url);
-  return await resp.json();
+  return resp.json();
 }
 
 async function getChefBirthday(id) {
-  const ricetta = await fetchJson(`https://dummyjson.com/recipes/${id}`);
-  const chef = await fetchJson(`https://dummyjson.com/users/${ricetta.userId}`);
+  let recipe;
+
+  try {
+    recipe = await fetchJson(`https://dummyjson.com/recipes/${id}`);
+  } catch (err) {
+    throw new Error(`Impossibile caricare la ricetta id: ${id}`);
+  }
+
+  if (recipe.message) {
+    throw new Error(recipe.message);
+  }
+
+  let chef;
+
+  try {
+    chef = await fetchJson(`https://dummyjson.com/users/${recipe.userId}`);
+  } catch (err) {
+    throw new Error(`Impossibile caricare lo chef id: ${recipe.userId}`);
+  }
+
+  if (chef.message) {
+    throw new Error(chef.message);
+  }
+
   return chef.birthDate;
 }
 
 (async () => {
-  const chefBirthday = await getChefBirthday(1);
-  console.log(`Data di nascita dello chef: ${chefBirthday}`);
+  try {
+    const chefBirthday = await getChefBirthday(1);
+    console.log(`Data di nascita dello chef: ${chefBirthday}`);
+  } catch (err) {
+    console.error(err);
+  }
 })();
